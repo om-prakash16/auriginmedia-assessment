@@ -1,5 +1,13 @@
 # Job Application Portal - Assignment Submission
 
+## Tech Stack
+
+- **Frontend**: React (via Vite), React Router DOM, Vanilla CSS
+- **Backend**: Node.js, Express.js
+- **Database**: PostgreSQL (using `pg` driver) with `JSONB` for dynamic schema storage
+- **Authentication**: JSON Web Tokens (JWT) & bcryptjs
+- **Testing**: Node's native test runner (`node --test`)
+
 ## Setup
 
 1. **Backend**:
