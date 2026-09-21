@@ -2,11 +2,11 @@
 
 ## Tech Stack
 
-- **Frontend**: React (via Vite), React Router DOM, Vanilla CSS
-- **Backend**: Node.js, Express.js
-- **Database**: PostgreSQL (using `pg` driver) with `JSONB` for dynamic schema storage
-- **Authentication**: JSON Web Tokens (JWT) & bcryptjs
-- **Testing**: Node's native test runner (`node --test`)
+- **Frontend:** React (Vite), React Router DOM, Vanilla CSS
+- **Backend:** Node.js, Express.js
+- **Database:** PostgreSQL (`pg`) with `JSONB` for dynamic job questionnaire schemas
+- **Authentication:** JWT and bcryptjs
+- **Testing:** Node.js native test runner (`node --test`)
 
 ## Setup
 
