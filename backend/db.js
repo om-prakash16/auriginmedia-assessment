@@ -2,7 +2,8 @@ const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/jobflow'
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/jobflow',
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
 const initDb = async () => {
