@@ -46,6 +46,10 @@ The bulk application workflow has been overhauled into a professional ATS interf
 - **Auto-Scrolling**: The `[Complete]` button in the sidebar will instantly scroll the user directly to the missing fields.
 ![Apply All Page](docs/apply-all-page.png)
 
+### 4. Admin Dashboard
+A dedicated dashboard for administrators (HR/Recruiters) provides a high-level overview of platform metrics and a comprehensive list of all applications. Admins can track applicants, view submitted answers, and update the status of each application.
+![Admin Dashboard](docs/admin-dashboard.png)
+
 ## Seed Data
 
 The three required seed jobs (Frontend Developer, Content Writer, Sales Associate) are automatically loaded into the PostgreSQL database on backend startup via `db.js`. No manual seeding step is required — simply run `npm start` in the backend directory and ensure your PostgreSQL server is running.
