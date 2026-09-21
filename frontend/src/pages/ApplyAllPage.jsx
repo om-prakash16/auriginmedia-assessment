@@ -7,6 +7,7 @@ import Card from '../components/ui/Card';
 import Alert from '../components/ui/Alert';
 import { submitBulkApplications } from '../api';
 import DynamicForm from '../components/application/DynamicForm';
+import { useAuth } from '../context/AuthContext';
 
 const ApplyAllPage = ({ selectedJobs, clearSelection, removeJobsFromSelection }) => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const ApplyAllPage = ({ selectedJobs, clearSelection, removeJobsFromSelection })
   const [submitError, setSubmitError] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [results, setResults] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (selectedJobs.length === 0 && !isSuccess && !results) {
@@ -67,18 +69,18 @@ const ApplyAllPage = ({ selectedJobs, clearSelection, removeJobsFromSelection })
     return { sharedQuestions: shared, jobUniqueQuestions: unique, questionMappings: mappings };
   }, [selectedJobs]);
 
-  // Auto-fill shared answers from localStorage on mount
+  // Auto-fill shared answers from authenticated user or localStorage on mount
   useEffect(() => {
     sharedQuestions.forEach(sq => {
       if (sq.label.trim().toLowerCase() === 'full name' && sq.type === 'text') {
-        const storedName = localStorage.getItem('common_name');
+        const storedName = user?.name || localStorage.getItem('common_name');
         if (storedName) {
           handleSharedAnswerChange(sq._sharedKey, storedName);
         }
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sharedQuestions]);
+  }, [sharedQuestions, user]);
 
   const handleSharedAnswerChange = (sharedKey, value) => {
     // Save to localStorage if it's "Full name"
@@ -231,16 +233,25 @@ const ApplyAllPage = ({ selectedJobs, clearSelection, removeJobsFromSelection })
         // Populate field errors
         const newErrors = {};
         let generalErrorCount = 0;
+        let systemErrorCount = 0;
         data.results.forEach(r => {
           if (r.status === 'invalid' && r.errors) {
             newErrors[r.jobId] = r.errors;
           } else if (r.status === 'duplicate') {
             generalErrorCount++;
+          } else if (r.status === 'error') {
+            systemErrorCount++;
           }
         });
         
         setValidationErrors(newErrors);
-        setSubmitError(`${generalErrorCount > 0 ? `${generalErrorCount} job(s) already applied to. ` : ''}Some applications require attention before submitting.`);
+        
+        let errorMsg = '';
+        if (generalErrorCount > 0) errorMsg += `${generalErrorCount} job(s) already applied to. `;
+        if (systemErrorCount > 0) errorMsg += `A system error occurred for ${systemErrorCount} job(s). Please try logging out and logging back in. `;
+        if (Object.keys(newErrors).length > 0) errorMsg += `Some applications require attention before submitting.`;
+        
+        setSubmitError(errorMsg.trim() || 'Failed to submit applications.');
       }
     } catch (err) {
       setSubmitError(err.message || 'Failed to submit applications.');

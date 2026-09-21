@@ -16,6 +16,17 @@ const ApplicationsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const getStatusBadgeProps = (status) => {
+    switch (status) {
+      case 'Submitted': return { bg: '#EFF6FF', color: '#1E40AF' }; // Blue
+      case 'Under Review': return { bg: '#FEF3C7', color: '#92400E' }; // Yellow
+      case 'Shortlisted': return { bg: '#E0E7FF', color: '#3730A3' }; // Indigo
+      case 'Hired': return { bg: '#D1FAE5', color: '#065F46' }; // Green
+      case 'Rejected': return { bg: '#FEE2E2', color: '#991B1B' }; // Red
+      default: return { bg: '#F1F5F9', color: '#475569' }; // Gray
+    }
+  };
+
   useEffect(() => {
     setLoading(true);
     Promise.all([getApplications(), getJobs()])
@@ -149,7 +160,17 @@ const ApplicationsPage = () => {
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <Badge variant="success">✓ Application submitted</Badge>
+                    <span style={{ 
+                        background: getStatusBadgeProps(app.status).bg,
+                        color: getStatusBadgeProps(app.status).color,
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '99px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {app.status === 'Submitted' ? '✓ ' : ''}{app.status}
+                    </span>
                   </div>
                 </div>
 

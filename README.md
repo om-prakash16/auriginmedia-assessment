@@ -8,7 +8,7 @@
    npm install
    npm start
    ```
-   (Runs on port 3001 using SQLite and Express)
+   (Runs on port 3001 using PostgreSQL and Express)
    *To run backend unit tests (Node 20+ required):* `npm test`
 
 2. **Frontend**:
@@ -24,6 +24,7 @@
    ```
    VITE_API_URL=https://your-production-api.com/api
    ```
+   The backend connects to PostgreSQL at `postgresql://postgres:postgres@localhost:5432/jobflow` by default. To override, set `DATABASE_URL` in the backend environment.
 
 ## User Guide
 
@@ -47,14 +48,14 @@ The bulk application workflow has been overhauled into a professional ATS interf
 
 ## Seed Data
 
-The three required seed jobs (Frontend Developer, Content Writer, Sales Associate) are automatically loaded into the SQLite database on backend startup via `db.js`. No manual seeding step is required — simply run `npm start` in the backend directory.
+The three required seed jobs (Frontend Developer, Content Writer, Sales Associate) are automatically loaded into the PostgreSQL database on backend startup via `db.js`. No manual seeding step is required — simply run `npm start` in the backend directory and ensure your PostgreSQL server is running.
 
 ## Design Answers
 
 ### Data Model
-For `applications`, the relational schema uses `job_id` and `applicant_id` as foreign keys to the respective tables. A `UNIQUE(job_id, applicant_id)` constraint is added to enforce that a user can only apply to a specific job once. The actual application data is stored in an `answers` column serialized as JSON (e.g., `{"q1": "John Doe", "q2": true}`). This design provides immediate relational consistency for tracking *who* applied to *what*, while retaining extreme flexibility for the dynamic `answers` schema without forcing EAV anti-patterns into SQL. SQLite foreign key enforcement is explicitly enabled via `PRAGMA foreign_keys = ON`.
+For `applications`, the relational schema uses `job_id` and `applicant_id` as foreign keys to the respective tables. A `UNIQUE(job_id, applicant_id)` constraint is added to enforce that a user can only apply to a specific job once. The actual application data is stored in an `answers` column using PostgreSQL's native `JSONB` data type (e.g., `{"q1": "John Doe", "q2": true}`). This design provides immediate relational consistency for tracking *who* applied to *what*, while retaining extreme flexibility for the dynamic `answers` schema without forcing EAV anti-patterns into SQL. PostgreSQL handles JSONB indexing flawlessly, allowing for future complex queries on specific answers.
 
-For tracking the user, we generate a UUID on the frontend (`crypto.randomUUID()`), persist it to `localStorage`, and send it via the `X-Applicant-Id` HTTP header. The backend automatically registers new applicants and associates their applications with this ID securely, providing a seamless sessionless identity without full auth logic.
+For tracking the user, we generate a JWT after signup/login. The backend automatically associates applications with this authenticated user securely.
 
 ### Dynamic Form
 The frontend builds forms dynamically based strictly on the `questions` array returned by the API. The `DynamicForm` component maps each question to a specialized UI input (`text`, `textarea`, `dropdown`, `checkbox`, `boolean`, `number`) using a registry pattern in `QuestionRenderer.jsx`. Absolutely zero job-specific logic is hardcoded on the frontend.
@@ -87,4 +88,4 @@ The frontend converts number inputs to `Number` type before sending, ensuring fr
 At 10,000 jobs and 1,000,000 applications:
 1. **Frontend "Apply to All"**: Creating a bulk UI for 10k jobs is computationally expensive in the browser. We would need to implement infinite scrolling or pagination on the job selection phase, and chunk the bulk submission payload to prevent browser memory crashes or HTTP timeout issues. Grouping identical questions could be moved to the backend to offload client CPU, or run in a Web Worker.
 2. **Backend Validation**: Parsing 10k JSON fields synchronously inside Express would block the Node.js event loop. The validation logic should be moved to a worker thread or offloaded to a background queue system (like BullMQ + Redis).
-3. **Database**: Writing 1 million applications via bulk array insertion requires transactions. Instead of a single massive `INSERT`, we should stream the incoming bulk applications into a message broker (Kafka/RabbitMQ) and use a consumer to batch-insert records asynchronously (e.g., chunks of 500 records), turning the `207 Multi-Status` response into an asynchronous `202 Accepted` polling mechanism for the user. Additionally, SQLite would need to be replaced with PostgreSQL to handle concurrent writes, and a JSONB index (GIN) would be required on the `answers` column if querying by specific answers becomes necessary.
+3. **Database**: Writing 1 million applications via bulk array insertion requires transactions. Instead of a single massive `INSERT`, we should stream the incoming bulk applications into a message broker (Kafka/RabbitMQ) and use a consumer to batch-insert records asynchronously (e.g., chunks of 500 records), turning the `207 Multi-Status` response into an asynchronous `202 Accepted` polling mechanism for the user. We already use PostgreSQL, which handles concurrent writes beautifully. To scale further, a GIN index on the `answers` JSONB column would be required if querying by specific answers becomes necessary.

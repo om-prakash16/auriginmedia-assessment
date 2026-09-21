@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const Header = () => {
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   return (
     <header className="header">
@@ -14,16 +16,37 @@ const Header = () => {
           JobFlow
         </Link>
         <nav className="nav-links">
-          <Link to="/" className={location.pathname === '/' ? 'active' : ''}>Jobs</Link>
-          <Link to="/applications" className={location.pathname === '/applications' ? 'active' : ''}>My Applications</Link>
+          {(!user || user.role !== 'admin') && (
+            <>
+              <Link to="/" className={location.pathname === '/' ? 'active' : ''}>Jobs</Link>
+              <Link to="/applications" className={location.pathname === '/applications' ? 'active' : ''}>My Applications</Link>
+            </>
+          )}
+          {user && user.role === 'admin' && (
+            <Link to="/admin" className={location.pathname === '/admin' ? 'active' : ''} style={{ color: 'var(--primary)', fontWeight: '600' }}>Admin Dashboard</Link>
+          )}
         </nav>
       </div>
-      <div className="user-profile">
-        <div className="avatar">OP</div>
-        <span>Om Prakash</span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: 'var(--text-muted)' }}>
-          <path d="M7 10l5 5 5-5z"/>
-        </svg>
+      <div className="user-profile" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        {user ? (
+          <>
+            <div className="avatar" style={{ background: 'var(--primary)', color: 'white', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+            </div>
+            <span style={{ fontWeight: '500' }}>{user.name}</span>
+            <button 
+              onClick={logout} 
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.9rem', marginLeft: '0.5rem' }}
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/login" style={{ color: 'var(--text-main)', textDecoration: 'none', fontWeight: '500' }}>Log In</Link>
+            <Link to="/signup" style={{ background: 'var(--primary)', color: 'white', padding: '0.5rem 1rem', borderRadius: '6px', textDecoration: 'none', fontWeight: '500' }}>Sign Up</Link>
+          </>
+        )}
       </div>
     </header>
   );

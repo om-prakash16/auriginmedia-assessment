@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJob, getJobs, applyToJob } from '../api';
+import { useAuth } from '../context/AuthContext';
 import DynamicForm from '../components/application/DynamicForm';
 import PageContainer from '../components/layout/PageContainer';
 import Button from '../components/ui/Button';
@@ -23,17 +24,18 @@ const JobDetailsPage = () => {
   const [submitError, setSubmitError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const { user } = useAuth();
 
-  // Pre-fill full name from localStorage if possible
+  // Pre-fill full name from authenticated user or localStorage if possible
   useEffect(() => {
     if (job) {
-      const storedName = localStorage.getItem('common_name');
+      const storedName = user?.name || localStorage.getItem('common_name');
       const nameQ = job.questions.find(q => q.label.trim().toLowerCase() === 'full name' && q.type === 'text');
       if (storedName && nameQ && !formData[nameQ.id]) {
         setFormData(prev => ({ ...prev, [nameQ.id]: storedName }));
       }
     }
-  }, [job]);
+  }, [job, user]);
 
   useEffect(() => {
     setLoading(true);
@@ -64,6 +66,12 @@ const JobDetailsPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    
     setSubmitError(null);
     setErrors({});
     setIsSubmitting(true);
@@ -242,7 +250,7 @@ const JobDetailsPage = () => {
                    Secure application
                 </div>
                 <Button type="submit" variant="primary" disabled={isSubmitting} style={{ padding: '0.75rem 2rem', fontSize: '1rem', borderRadius: '10px' }}>
-                  {isSubmitting ? 'Submitting...' : 'Submit Application →'}
+                  {isSubmitting ? 'Submitting...' : user ? 'Submit Application →' : 'Log In to Apply →'}
                 </Button>
               </div>
             </form>
