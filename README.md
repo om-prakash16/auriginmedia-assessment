@@ -16,6 +16,16 @@
 - Unit tests
 - Live deployment
 
+## Live Demo
+
+- **Frontend (Vercel)**: `[INSERT_YOUR_VERCEL_URL_HERE]`
+- **Backend API (Render)**: `https://auriginmedia-assessment.onrender.com`
+
+### Admin Dashboard Access
+To test the HR/Admin functionality, use the following seeded credentials:
+- **Email**: `admin@aurigin.com`
+- **Password**: `admin`
+
 ## API
 
 | Method | Endpoint | Purpose |
