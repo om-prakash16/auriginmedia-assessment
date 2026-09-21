@@ -8,7 +8,45 @@
 - **Authentication:** JWT and bcryptjs
 - **Testing:** Node.js native test runner (`node --test`)
 
+## Bonus Features
+
+- Applicant authentication with JWT and bcryptjs
+- HR/Admin dashboard for reviewing applications
+- Application status tracking
+- Unit tests
+- Live deployment
+
+## API
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/jobs` | List/search jobs |
+| GET | `/api/jobs/:id` | Get job + questions |
+| POST | `/api/jobs/:id/apply` | Apply to one job |
+| POST | `/api/applications/bulk` | Apply to multiple jobs |
+| GET | `/api/applications` | Applicant's applications |
+| GET | `/api/admin/applications` | HR applications |
+| GET | `/api/admin/applications/:id` | View application |
+| PATCH | `/api/admin/applications/:id/status` | Update status |
+
 ## Setup
+
+### Prerequisites
+
+- Node.js 20+
+- PostgreSQL 14+
+- npm
+
+### Database
+
+Create a PostgreSQL database named `jobflow`:
+
+```sql
+CREATE DATABASE jobflow;
+```
+
+The backend automatically creates/initializes the required tables and loads the 3 assignment jobs on startup.
+
 
 1. **Backend**:
    ```bash
@@ -65,7 +103,7 @@ The three required seed jobs (Frontend Developer, Content Writer, Sales Associat
 ## Design Answers
 
 ### Data Model
-For `applications`, the relational schema uses `job_id` and `applicant_id` as foreign keys to the respective tables. A `UNIQUE(job_id, applicant_id)` constraint is added to enforce that a user can only apply to a specific job once. The actual application data is stored in an `answers` column using PostgreSQL's native `JSONB` data type (e.g., `{"q1": "John Doe", "q2": true}`). This design provides immediate relational consistency for tracking *who* applied to *what*, while retaining extreme flexibility for the dynamic `answers` schema without forcing EAV anti-patterns into SQL. PostgreSQL handles JSONB indexing flawlessly, allowing for future complex queries on specific answers.
+For `applications`, the relational schema uses `job_id` and `applicant_id` as foreign keys to the respective tables. A `UNIQUE(job_id, applicant_id)` constraint is added to enforce that a user can only apply to a specific job once. The actual application data is stored in an `answers` column using PostgreSQL's native `JSONB` data type (e.g., `{"q1": "John Doe", "q2": true}`). This design provides immediate relational consistency for tracking *who* applied to *what*, while retaining flexibility for storing different answer structures without forcing EAV anti-patterns into SQL. JSONB also allows targeted indexing and querying when needed.
 
 For tracking the user, we generate a JWT after signup/login. The backend automatically associates applications with this authenticated user securely.
 
@@ -82,7 +120,7 @@ In the "Apply to All" bulk flow, the frontend parses the question arrays of all 
 - The backend endpoint (`POST /applications/bulk`) returns HTTP 207 Multi-Status, processing each job independently and reporting per-job results (`created`, `invalid`, `duplicate`, `not_found`).
 - Partial success is handled gracefully: successful applications are removed from the selection, and failed ones remain with error feedback.
 
-This provides a highly ergonomic user experience (O(1) data entry for shared requirements) while maintaining complete payload fidelity for the backend.
+This provides a highly ergonomic user experience while maintaining complete payload fidelity for the backend.
 
 ### Validation
 Server-side validation is centralized in a pure `validateAnswers(questions, answers)` function to ensure strict separation of concerns and enable testability outside the Express context.
@@ -97,7 +135,12 @@ Errors are mapped identically to their question IDs (e.g., `{ errors: { q2: "Thi
 The frontend converts number inputs to `Number` type before sending, ensuring frontend/backend agreement on types.
 
 ### At Scale
+
 At 10,000 jobs and 1,000,000 applications:
-1. **Frontend "Apply to All"**: Creating a bulk UI for 10k jobs is computationally expensive in the browser. We would need to implement infinite scrolling or pagination on the job selection phase, and chunk the bulk submission payload to prevent browser memory crashes or HTTP timeout issues. Grouping identical questions could be moved to the backend to offload client CPU, or run in a Web Worker.
-2. **Backend Validation**: Parsing 10k JSON fields synchronously inside Express would block the Node.js event loop. The validation logic should be moved to a worker thread or offloaded to a background queue system (like BullMQ + Redis).
-3. **Database**: Writing 1 million applications via bulk array insertion requires transactions. Instead of a single massive `INSERT`, we should stream the incoming bulk applications into a message broker (Kafka/RabbitMQ) and use a consumer to batch-insert records asynchronously (e.g., chunks of 500 records), turning the `207 Multi-Status` response into an asynchronous `202 Accepted` polling mechanism for the user. We already use PostgreSQL, which handles concurrent writes beautifully. To scale further, a GIN index on the `answers` JSONB column would be required if querying by specific answers becomes necessary.
+
+- Jobs and applications would use pagination and appropriate database indexes.
+- Frequently accessed job definitions could be cached.
+- Bulk application processing could move to an asynchronous queue for large workloads.
+- PostgreSQL indexing, connection pooling, and query optimization would become important.
+- Application history would be paginated instead of loading all records at once.
+- If answer-based filtering became common, appropriate JSONB indexes could be added.
