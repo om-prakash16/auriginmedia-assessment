@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/layout/Header';
+import Footer from './components/layout/Footer';
 import JobsPage from './pages/JobsPage';
 import JobDetailsPage from './pages/JobDetailsPage';
 import ApplyAllPage from './pages/ApplyAllPage';
@@ -100,6 +101,7 @@ function AppContent() {
           } />
         </Routes>
       </main>
+      <Footer />
     </div>
   );
 }
