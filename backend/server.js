@@ -11,6 +11,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Root endpoint for health check
+app.get('/', (req, res) => {
+  res.json({
+    name: 'JobFlow API',
+    status: 'online',
+    version: '1.0.0',
+    message: 'Welcome to the JobFlow backend service.'
+  });
+});
+
 // Middleware to verify JWT token
 const requireAuth = (req, res, next) => {
   const authHeader = req.headers['authorization'];
