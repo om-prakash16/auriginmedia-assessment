@@ -56,7 +56,7 @@ function validateAnswers(questions, answers) {
               }
             }
             // Textarea min length validation
-            if (q.type === 'textarea' && answer.trim().length < 20) {
+            if (q.type === 'textarea' && q.label && q.label.toLowerCase().includes('pitch') && answer.trim().length < 20) {
               errors[q.id] = 'Please provide a more detailed answer (min 20 characters)';
             }
           }

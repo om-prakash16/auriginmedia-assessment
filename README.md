@@ -25,6 +25,26 @@
    VITE_API_URL=https://your-production-api.com/api
    ```
 
+## User Guide
+
+Here is a visual walkthrough of the Job Application Portal, highlighting the new Application Tracking System (ATS) UI. 
+
+### 1. Browse Jobs
+The main portal displays all available jobs. Users can view individual job details or apply directly to a single job.
+![Jobs Page](docs/jobs-page.png)
+
+### 2. Bulk Selection
+Users can select multiple jobs using the checkboxes. Once two or more jobs are selected, a sticky action bar appears at the bottom of the screen, allowing users to enter the "Apply to All" bulk flow.
+![Bulk Selection](docs/jobs-selection.png)
+
+### 3. Apply to All (ATS Flow)
+The bulk application workflow has been overhauled into a professional ATS interface:
+- **Common Questions**: Questions that appear in multiple jobs are grouped at the top so applicants only need to answer them once.
+- **Progress Tracking**: A dynamic sidebar tracks the overall application progress and pinpoints exactly which fields are missing.
+- **Collapsible Cards**: Each job maintains its own isolated application card, clearly badged with its completion status (`⚠ Needs information`, `✓ Ready`, `✓ Submitted`).
+- **Auto-Scrolling**: The `[Complete]` button in the sidebar will instantly scroll the user directly to the missing fields.
+![Apply All Page](docs/apply-all-page.png)
+
 ## Seed Data
 
 The three required seed jobs (Frontend Developer, Content Writer, Sales Associate) are automatically loaded into the SQLite database on backend startup via `db.js`. No manual seeding step is required — simply run `npm start` in the backend directory.

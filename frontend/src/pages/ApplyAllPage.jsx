@@ -183,7 +183,7 @@ const ApplyAllPage = ({ selectedJobs, clearSelection, removeJobsFromSelection })
           if (q.type === 'text' && q.label && q.label.toLowerCase().includes('url')) {
             try { new URL(answer); } catch(e) { isMissing = true; }
           }
-          if (q.type === 'textarea' && answer.trim().length > 0 && answer.trim().length < 20) {
+          if (q.type === 'textarea' && q.label && q.label.toLowerCase().includes('pitch') && answer.trim().length > 0 && answer.trim().length < 20) {
             isMissing = true;
           }
         }
@@ -299,51 +299,69 @@ const ApplyAllPage = ({ selectedJobs, clearSelection, removeJobsFromSelection })
         <div style={{ flex: '0 0 320px' }}>
           <div style={{ position: 'sticky', top: '2rem' }}>
             <h1 style={{ fontSize: '1.75rem', margin: '0 0 0.5rem 0', color: '#0F172A' }}>
-              {selectedJobs.length === 1 ? 'Complete Application' : 'Apply to All'}
+              Apply to All
             </h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: '0 0 2rem 0' }}>Complete the required fields for your selected positions.</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: '0 0 2rem 0' }}>{selectedJobs.length} selected {selectedJobs.length === 1 ? 'job' : 'jobs'}</p>
             
-            <Card style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
-              <div style={{ fontWeight: '600', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Application Progress</span>
-                <span style={{ color: 'var(--primary)' }}>{completed} / {total}</span>
+            <Card style={{ padding: '1.5rem', marginBottom: '1.5rem', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+              <div style={{ fontWeight: '600', marginBottom: '1rem', color: '#0F172A' }}>
+                Application Progress
               </div>
-              <div style={{ width: '100%', height: '6px', background: '#E2E8F0', borderRadius: '3px', marginBottom: '1.5rem', overflow: 'hidden' }}>
-                <div style={{ width: `${(completed / total) * 100}%`, height: '100%', background: 'var(--primary)', transition: 'width 0.3s ease' }}></div>
+              <div style={{ width: '100%', height: '8px', background: '#E2E8F0', borderRadius: '4px', marginBottom: '0.5rem', overflow: 'hidden' }}>
+                <div style={{ width: `${(completed / total) * 100}%`, height: '100%', background: '#2563EB', transition: 'width 0.3s ease' }}></div>
+              </div>
+              <div style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '1.5rem', fontWeight: '500' }}>
+                {completed} of {total} ready
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {selectedJobs.map((job, idx) => {
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                {selectedJobs.map((job) => {
                   const jobStatus = jobStatuses[job.id] || { isComplete: false, missingFields: [] };
                   const isJobComplete = jobStatus.isComplete;
                   const missingFields = jobStatus.missingFields;
-                  const hasStarted = Object.keys(bulkAnswers[job.id] || {}).length > 0;
                   const serverResult = results?.find(r => r.jobId === job.id);
                   
-                  let statusColor = isJobComplete ? '#10B981' : (hasStarted ? '#F59E0B' : '#94A3B8');
-                  if (serverResult && serverResult.status === 'duplicate') statusColor = '#EF4444';
-
                   return (
-                    <div key={job.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', position: 'relative' }}>
-                      {idx !== selectedJobs.length - 1 && (
-                        <div style={{ position: 'absolute', left: '9px', top: '24px', bottom: '-12px', width: '2px', background: '#E2E8F0' }}></div>
-                      )}
-                      <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: `2px solid ${statusColor}`, background: isJobComplete ? statusColor : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '2px', zIndex: 1 }}>
-                        {isJobComplete && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                    <div key={job.id} style={{ display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {serverResult?.status === 'created' ? (
+                          <span style={{ color: '#10B981', fontWeight: 'bold' }}>✓</span>
+                        ) : serverResult?.status === 'invalid' || serverResult?.status === 'duplicate' ? (
+                          <span style={{ color: '#EF4444', fontWeight: 'bold' }}>✕</span>
+                        ) : isJobComplete ? (
+                          <span style={{ color: '#10B981', fontWeight: 'bold' }}>✓</span>
+                        ) : (
+                          <span style={{ color: '#F59E0B', fontWeight: 'bold' }}>⚠</span>
+                        )}
+                        <span style={{ fontWeight: '600', fontSize: '0.95rem', color: '#0F172A' }}>{job.title}</span>
                       </div>
-                      <div>
-                        <div style={{ fontWeight: '500', fontSize: '0.9rem', color: isJobComplete ? '#0F172A' : '#475569' }}>{job.title}</div>
+                      
+                      <div style={{ paddingLeft: '1.25rem', marginTop: '0.25rem' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '0.25rem' }}>
+                          {job.company} &middot; {job.location}
+                        </div>
                         
                         {serverResult && serverResult.status === 'duplicate' && (
                           <div style={{ fontSize: '0.85rem', color: '#EF4444', marginTop: '0.25rem' }}>Already applied</div>
                         )}
-                        {isJobComplete ? (
-                          <div style={{ fontSize: '0.85rem', color: '#10B981', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            ✓ Ready
-                          </div>
-                        ) : (
-                          <div style={{ fontSize: '0.85rem', color: '#F59E0B', marginTop: '0.25rem', display: 'flex', alignItems: 'flex-start', gap: '0.25rem' }}>
-                            <span>⚠</span> <span>Missing {missingFields.join(', ')}</span>
+                        
+                        {!isJobComplete && missingFields.length > 0 && (
+                          <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: '#FEF3C7', borderRadius: '4px', border: '1px solid #FDE68A' }}>
+                            <div style={{ fontSize: '0.8rem', color: '#B45309', fontWeight: '600', marginBottom: '0.25rem' }}>Missing:</div>
+                            <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#92400E', fontSize: '0.8rem' }}>
+                              {missingFields.map((f, i) => <li key={i}>{f}</li>)}
+                            </ul>
+                            <button 
+                              onClick={() => {
+                                const el = document.getElementById(`job-card-${job.id}`);
+                                if (el) {
+                                  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }
+                              }}
+                              style={{ marginTop: '0.5rem', background: 'none', border: 'none', color: '#2563EB', fontWeight: '600', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}
+                            >
+                              [Complete]
+                            </button>
                           </div>
                         )}
                       </div>
@@ -365,10 +383,10 @@ const ApplyAllPage = ({ selectedJobs, clearSelection, removeJobsFromSelection })
           )}
 
           {sharedQuestions.length > 0 && (
-            <Card style={{ padding: '2.5rem', marginBottom: '2rem' }}>
+            <Card style={{ padding: '2.5rem', marginBottom: '2rem', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
                 <div style={{ background: '#F1F5F9', color: '#475569', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700' }}>1</div>
-                <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Common Questions</h2>
+                <h2 style={{ fontSize: '1.25rem', margin: 0, color: '#0F172A' }}>Common Questions</h2>
               </div>
               <div style={{ marginBottom: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                 These questions apply to multiple roles you selected. Answer them once here.
@@ -386,10 +404,10 @@ const ApplyAllPage = ({ selectedJobs, clearSelection, removeJobsFromSelection })
             </Card>
           )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {selectedJobs.map((job) => {
               const uniqueQs = jobUniqueQuestions[job.id] || [];
-              if (uniqueQs.length === 0) return null; // Only show jobs that have unique questions
+              if (uniqueQs.length === 0) return null;
               return (
                 <ApplicationSection
                   key={job.id}
@@ -398,6 +416,7 @@ const ApplyAllPage = ({ selectedJobs, clearSelection, removeJobsFromSelection })
                   errors={validationErrors[job.id] || {}}
                   onChange={(questionId, value) => handleUniqueAnswerChange(job.id, questionId, value)}
                   isReady={jobStatuses[job.id]?.isComplete}
+                  serverResult={results?.find(r => r.jobId === job.id)}
                 />
               );
             })}
@@ -410,6 +429,7 @@ const ApplyAllPage = ({ selectedJobs, clearSelection, removeJobsFromSelection })
         total={selectedJobs.length} 
         readyCount={completed}
         onSubmit={handleBulkSubmit} 
+        onReview={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         isSubmitting={isSubmitting} 
       />
     </PageContainer>
