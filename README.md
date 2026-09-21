@@ -18,7 +18,7 @@
 
 ## Live Demo
 
-- **Frontend (Vercel)**: `[INSERT_YOUR_VERCEL_URL_HERE]`
+- **Frontend (Vercel)**: https://frontend-three-kohl-8fq892gzmx.vercel.app/
 - **Backend API (Render)**: `https://auriginmedia-assessment.onrender.com`
 
 ### Admin Dashboard Access
